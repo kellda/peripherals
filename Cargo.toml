@@ -1,0 +1,13 @@
+[package]
+name = "peripherals"
+version = "0.0.1"
+authors = ["kellda <damikefr@gmail.com>"]
+edition = "2018"
+description = "Microcontroller peripherals definition and ergonomic access"
+repository = "https://github.com/kellda/peripherals"
+license = "MIT OR Apache-2.0"
+keywords = ["peripheral", "register", "registers", "mmio", "embedded"]
+categories = ["hardware-support", "embedded", "no-std"]
+
+[dependencies]
+paste = "1.0"
