@@ -22,5 +22,8 @@
 #![no_implicit_prelude]
 #![allow(missing_docs)]
 
+pub mod complex;
 pub mod device;
-pub mod peripheral;
+pub mod field_type;
+pub mod periph;
+pub mod register;

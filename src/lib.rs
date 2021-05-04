@@ -1,5 +1,5 @@
 //! # peripherals
-//! 
+//!
 //! Define and access your microcontroller peripherals
 //!
 //! # Features
@@ -11,36 +11,39 @@
 //! - Read/write access at the regiser level
 //! - Strong typing ensure you don't mix up registers
 //! - Generic over the peripheral instance
-//! - See the example module for an example of usage and generated API
 //!
 //! # Usage
 //!
-//! - Define peripherals with the [`periph!`] macro
-//! - Define microcontrollers / devices with the [`device!`] macro
-//! - Take a look at the [`example`] module to see what the generated API looks like
+//! Peripherals are defined with the [`periph!`] macro. Registers and fields can be defined in the
+//! same macro invocation or separately with the [`register!`] and [`field_type!`] macros.
+//! Microcontrollers / devices are then defined with the [`device!`] macro.
+//!
+//! These macros generate types to represent fields and their values, and marker types for
+//! registers and peripherals. These types can be seen in the [`example`] module.
+//!
+//! Registers are accessed with the [`Reg`] struct. [`Value`]s are used to read and write them.
 //!
 //! To use the generated device struct, create it from `()` as part of your initialisation routine.
 //! There sould be only one instance of the device (and the right one) in your whole program.
 
 #![no_std]
 #![warn(missing_docs)]
-
-/// A peripheral instance, that has a given address
-pub unsafe trait Peripheral {
-    /// The base address of this peripheral instance
-    const BASE: usize;
-}
-
-/// Error returned when converting an interger to a field value fails
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct InvalidValue;
+#![warn(clippy::missing_inline_in_public_items)]
+#![warn(clippy::missing_const_for_fn)]
+#![feature(const_fn)]
 
 #[doc(hidden)]
 pub use paste::paste;
+pub use utils::*;
+
+mod utils;
+
+mod macros {
+    mod device;
+    mod field_type;
+    mod periph;
+    mod register;
+}
 
 #[cfg(any(doc, test))]
 pub mod example;
-#[cfg(test)]
-mod test;
-mod peripheral;
-mod device;

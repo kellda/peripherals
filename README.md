@@ -11,7 +11,7 @@ Define and access your microcontroller peripherals
 - Read/write access at the regiser level
 - Strong typing ensures you don't mix up registers
 - Generic over the peripheral instance
-- See the example module for an example of usage and generated API
+- See the example module for an example of generated types
 
 # Inspiration
 

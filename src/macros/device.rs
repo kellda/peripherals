@@ -1,7 +1,7 @@
 /// Define a microcontroller and which peripherals it has
 ///
 /// It is recommended to have one module per device and thus to invoke this macros in its own
-/// module. For an example of the generated api, see the [example module](crate::example::device).
+/// module. For an example of the generated types, see the [example module](crate::example::device).
 ///
 /// # Usage
 ///
@@ -31,7 +31,7 @@
 /// - The name of the peripheral is generaly written in uppercase. It is used to name the marker
 ///   type for this instance as well as the field (in lowercase) in the device struct.
 /// - The base address (here `0x1234`) is the address of the register at offset `0` of the
-///   peripheral. That is, each register will be at (_base address_ + _register offset_).
+///   peripheral. That is, each register will be at (base address + register offset).
 /// - The peripheral type is a struct defined with the [`periph!`] macro. You can either import
 ///   each used peripheral or use absolute or relative paths.
 
@@ -54,10 +54,10 @@ macro_rules! device {
 
         $($(#[$periph_attr])*
         #[derive(Debug)]
-        #[allow(non_camel_case_types)]
         pub enum $periph {}
 
-        unsafe impl $crate::Peripheral for $periph {
+        $(#[$periph_attr])*
+        impl $crate::Peripheral for $periph {
             const BASE: usize = $base;
         })*
     }

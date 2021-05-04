@@ -6,7 +6,14 @@ crate::device! {
     /// The microcontroller
     Microcontroller;
     /// Some peripheral
-    PERIPH1 @ 0x0010: super::peripheral::Peripheral;
+    PERIPH1 @ 0x0010: super::periph::Peripheral;
     /// An other instance of the same peripheral
-    PERIPH2 @ 0x0020: super::peripheral::Peripheral;
+    PERIPH2 @ 0x0020: super::periph::Peripheral;
+    /// An other peripheral
+    COMPLEX @ 0x0030: super::complex::ComplexPeripheral;
+}
+
+#[test]
+fn zero_sized() {
+    ::core::assert_eq!(::core::mem::size_of::<Microcontroller>(), 0);
 }
