@@ -63,76 +63,116 @@
 #[macro_export]
 macro_rules! periph {
     (
-        $(#[$periph_attr:meta])*
+        $(#[$($periph_attr:tt)*])*
         $periph:ident;
-        $($(#[$reg_attr:meta])* $rw:ident $reg:ident @ $offset:literal : $int:ty = $desc1:tt $desc2:tt)*
-    ) => { $crate::paste! {
-        $(#[$periph_attr])*
-        #[derive(Debug)]
-        pub struct $periph<P> {$(
-            $(#[$reg_attr])*
-            pub [<$reg:lower>]: $crate::Reg<$reg, P>,
-        )*}
+        $($(#[$($reg_attr:tt)*])* $rw:ident $reg:ident @ $offset:literal : $int:ty = $desc1:tt $desc2:tt)*
+    ) => {
+        $crate::periph_attr_inner! { @type { $([$($periph_attr)*])* } {} {
+            periph_inner: @struct $periph {$( $(#[$($reg_attr)*])* $reg )*} {}
+        }}
 
-        impl<P: $crate::Peripheral> $periph<P> {
-            /// Erase peripheral information
-            ///
-            /// This allows to choose at runtime which instance of a peripheral to use.
-            #[inline]
-            pub fn into_dyn(self) -> &'static mut [<Dyn $periph>] {
-                unsafe { &mut *(P::BASE as *mut _) }
+        $crate::paste! { $crate::periph_attr_inner! { @impl { $([$($periph_attr)*])* } {} {
+        periph_attr_inner: @expand
+            impl<P: $crate::Peripheral> $periph<P> {
+                /// Erase peripheral information
+                ///
+                /// This allows to choose at runtime which instance of a peripheral to use.
+                #[inline]
+                pub fn into_dyn(self) -> &'static mut [<Dyn $periph>] {
+                    unsafe { &mut *(P::BASE as *mut _) }
+                }
             }
-        }
+        }}}
 
-        $($crate::periph_inner!( $(#[$reg_attr])* $rw $reg @ $offset : $int = $desc1 $desc2); )*
+        $($crate::periph_inner!( $(#[$($reg_attr)*])* $rw $reg @ $offset : $int = $desc1 $desc2); )*
 
-        $(#[$periph_attr])*
-        #[derive(Debug)]
-        pub struct [<Dyn $periph>] {$(
-            $(#[$reg_attr])*
-            pub [<$reg:lower>]: $crate::DynReg<$reg>,
-        )*}
-    }};
+        $crate::periph_attr_inner! { @type { $([$($periph_attr)*])* } {} {
+            periph_inner: @struct $periph dyn {$( $(#[$($reg_attr)*])* $reg )*} {}
+        }}
+    };
 }
 
 #[macro_export]
 #[doc(hidden)]
 macro_rules! periph_inner {
-    ($(#[$attr:meta])* $rw:ident $reg:ident @ $offset:literal : $int:ty = $desc:ty ;) => {
-        $(#[$attr])*
+    ($(#[$($attr:tt)*])* $rw:ident $reg:ident @ $offset:literal : $int:ty = $desc:ty ; ) => {
+        $crate::periph_attr_inner! { @type { $([$($attr)*])* } {} {
+        periph_attr_inner: @expand
+            #[derive(Debug)]
+            pub enum $reg {}
+        }}
+
+        $crate::periph_attr_inner! { @impl { $([$($attr)*])* } {} {
+        periph_attr_inner: @expand
+            impl $crate::Register for $reg {
+                type Int = $int;
+                type Value = $desc;
+
+                const OFFSET: usize = $offset;
+                const NAME: &'static str = stringify!($reg);
+            }
+        }}
+
+        $crate::periph_attr_inner! { @impl { $([$($attr)*])* } {} { periph_inner: @impl $rw $reg }}
+    };
+    ($(#[$($attr:tt)*])* $rw:ident $reg:ident @ $offset:literal : $int:ty = $reset:literal $desc:tt) => {
+        $crate::register!($(#[$($attr)*])* $reg: $int = $reset $desc);
+
+        $crate::periph_attr_inner! { @impl { $([$($attr)*])* } {} {
+        periph_attr_inner: @expand
+            impl $crate::Register for $reg {
+                type Int = $int;
+                type Value = $reg;
+
+                const OFFSET: usize = $offset;
+                const NAME: &'static str = stringify!($reg);
+            }
+        }}
+
+        $crate::periph_attr_inner! { @impl { $([$($attr)*])* } {} { periph_inner: @impl $rw $reg }}
+    };
+
+    (@impl $(#[$attr:meta])* rw $reg:ident) => {
+        impl $crate::ReadRegister for $reg {}
+        impl $crate::WriteRegister for $reg {}
+    };
+    (@impl $(#[$attr:meta])* r $reg:ident) => {
+        impl $crate::ReadRegister for $reg {}
+    };
+    (@impl $(#[$attr:meta])* w $reg:ident) => {
+        impl $crate::WriteRegister for $reg {}
+    };
+
+    (@struct $periph:ident {} {$(#[$periph_attr:meta])*
+        $($reg:ident $(#[$attr:meta])*)*
+    }) => { $crate::paste! {
+        $(#[$periph_attr])*
         #[derive(Debug)]
-        pub enum $reg {}
-
-        impl $crate::Register for $reg {
-            type Int = $int;
-            type Value = $desc;
-
-            const OFFSET: usize = $offset;
-        }
-
-        $crate::periph_inner!(@impl $rw $reg);
+        pub struct $periph<P: $crate::Peripheral> {$(
+            $(#[$attr])*
+            pub [<$reg:lower>]: $crate::Reg<$reg, P>,
+        )*}
+    }};
+    (@struct $periph:ident dyn {} {$(#[$periph_attr:meta])*
+        $($reg:ident $(#[$attr:meta])*)*
+    }) => { $crate::paste! {
+        $(#[$periph_attr])*
+        #[derive(Debug)]
+        pub struct [<Dyn $periph>] {$(
+            $(#[$attr])*
+            pub [<$reg:lower>]: $crate::DynReg<$reg>,
+        )*}
+    }};
+    (@struct $(#[$attr:meta])* $periph:ident $($type:ident)? {} {$($rest:tt)*} ) => {
+        $crate::periph_inner!(@struct $periph $($type)? {} { $($rest)* $(#[$attr])* } );
     };
-    ($(#[$attr:meta])* $rw:ident $reg:ident @ $offset:literal : $int:ty = $reset:literal $desc:tt) => {
-        $crate::register!($(#[$attr])* $reg: $int = $reset $desc);
-
-        impl $crate::Register for $reg {
-            type Int = $int;
-            type Value = $reg;
-
-            const OFFSET: usize = $offset;
-        }
-
-        $crate::periph_inner!(@impl $rw $reg);
-    };
-
-    (@impl rw $reg:ident) => {
-        impl $crate::ReadRegister for $reg {}
-        impl $crate::WriteRegister for $reg {}
-    };
-    (@impl r $reg:ident) => {
-        impl $crate::ReadRegister for $reg {}
-    };
-    (@impl w $reg:ident) => {
-        impl $crate::WriteRegister for $reg {}
+    (@struct
+        $(#[$prev:meta])* $periph:ident $($type:ident)?
+        { $(#[$($attr:tt)*])* $reg:ident $($rest:tt)* }
+        { $($parsed:tt)* }
+    ) => {
+        $crate::periph_attr_inner! { @field { $([$($attr)*])* } {} {
+            periph_inner: @struct $periph $($type)? { $($rest)* } { $($parsed)* $(#[$prev])* $reg }
+        }}
     };
 }

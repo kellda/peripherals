@@ -2,7 +2,7 @@
 
 Define and access your microcontroller peripherals
 
-# Features
+## Features
 
 - A macro to generate code for peripherals, registers, and register fields
 - Zero-sized structs to represent peripherals and registers
@@ -13,7 +13,7 @@ Define and access your microcontroller peripherals
 - Generic over the peripheral instance
 - See the example module for an example of generated types
 
-# Inspiration
+## Inspiration
 
 This is inspired primarly from
 
@@ -23,7 +23,7 @@ This is inspired primarly from
 
 and likely by every other regiser access crate out there
 
-# License
+## License
 
 Licensed under either of
 
@@ -32,7 +32,7 @@ Licensed under either of
 
 at your option.
 
-# Contribution
+## Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in
 the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any

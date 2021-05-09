@@ -1,7 +1,7 @@
 //! Types and trait needed for this library
 
 use core::convert::TryInto;
-use core::fmt::Debug;
+use core::fmt::{self, Debug};
 use core::marker::PhantomData;
 use core::ops::*;
 
@@ -32,15 +32,28 @@ mod private {
         + Shr<usize, Output = Self>
         + Eq
         + Default
+        + fmt::Binary
+        + fmt::LowerHex
         + Copy
     {
+        const WIDTH: usize;
     }
 
-    impl Int for u8 {}
-    impl Int for u16 {}
-    impl Int for u32 {}
-    impl Int for u64 {}
-    impl Int for u128 {}
+    impl Int for u8 {
+        const WIDTH: usize = 8;
+    }
+    impl Int for u16 {
+        const WIDTH: usize = 16;
+    }
+    impl Int for u32 {
+        const WIDTH: usize = 32;
+    }
+    impl Int for u64 {
+        const WIDTH: usize = 64;
+    }
+    impl Int for u128 {
+        const WIDTH: usize = 128;
+    }
 
     pub trait Both<T> {
         type Output;
@@ -73,6 +86,8 @@ mod private {
 pub trait Peripheral {
     /// The base address of this peripheral instance
     const BASE: usize;
+    /// The name to be displayed in debug
+    const NAME: &'static str;
 }
 
 /// A trait for the register associated with a value
@@ -83,6 +98,8 @@ pub trait RegisterValue {
     type Int: Int;
     /// The reset value of this register
     const RESET: Self::Int;
+    /// The name to be displayed in debug
+    const NAME: &'static str;
 }
 
 /// A trait for registers
@@ -96,6 +113,8 @@ pub trait Register {
 
     /// The offset from the base address
     const OFFSET: usize;
+    /// The name to be displayed in debug
+    const NAME: &'static str;
 }
 
 /// A marker trait for readable registers

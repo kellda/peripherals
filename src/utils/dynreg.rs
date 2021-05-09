@@ -5,7 +5,6 @@ use super::*;
 /// This allows to choose at runtime which instance of a peripheral to use. It has the same methods
 /// than the [`Reg`] type. It is created by [`Reg::into_dyn`] or as part of the struct created by
 /// `peripheral.into_dyn()`.
-#[derive(Debug)]
 pub struct DynReg<R> {
     _reg: PhantomData<R>,
 }
@@ -37,7 +36,7 @@ impl<R: ReadRegister> DynReg<R> {
     ///
     /// Same as `register.read().field(fields)`. See [`Value::field`] for more details.
     #[inline]
-    pub fn field<T>(self, field: Field<R::Value, T>) -> T
+    pub fn field<T>(self, field: Field<R::Value, T, R::Int>) -> T
     where
         R::Int: Into<T>,
     {
@@ -102,5 +101,11 @@ impl<R: ReadRegister + WriteRegister> DynReg<R> {
     pub fn toggle<F: Into<Fields<R::Value, Toggle>>>(&mut self, fields: F) {
         let fields = fields.into();
         self.write(self.read() ^ fields);
+    }
+}
+
+impl<R: Register> Debug for DynReg<R> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "DynReg {} @ 0x{:06p}", R::NAME, self.ptr())
     }
 }

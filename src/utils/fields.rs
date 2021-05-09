@@ -62,7 +62,6 @@ use super::*;
 /// assert_eq!(value.value(), 0b1001);
 /// ```
 
-#[derive(Debug)]
 pub struct Fields<R: RegisterValue, T = ()> {
     mask: R::Int,
     _reg: PhantomData<R>,
@@ -121,6 +120,28 @@ impl<R: RegisterValue, T> Default for Fields<R, T> {
             mask: R::Int::default(),
             _reg: PhantomData,
             _type: PhantomData,
+        }
+    }
+}
+
+impl<R: RegisterValue, T> Debug for Fields<R, T> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        if fmt.alternate() {
+            write!(
+                fmt,
+                "Fields<{}>(0b{:02$b})",
+                R::NAME,
+                self.mask,
+                <R::Int as Int>::WIDTH
+            )
+        } else {
+            write!(
+                fmt,
+                "Fields<{}>(0x{:02$x})",
+                R::NAME,
+                self.mask,
+                <R::Int as Int>::WIDTH / 4
+            )
         }
     }
 }

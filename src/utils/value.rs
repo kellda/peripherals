@@ -56,7 +56,6 @@ use super::*;
 /// assert_eq!(value.value(), 0b0100);
 /// ```
 
-#[derive(Debug)]
 pub struct Value<R: RegisterValue> {
     value: R::Int,
     _reg: PhantomData<R>,
@@ -86,7 +85,7 @@ impl<R: RegisterValue> Value<R> {
     ///
     /// This returns the value of a field defined with the [`periph!`] or [`register!`] macro.
     #[inline]
-    pub fn field<T>(self, field: Field<R, T>) -> T
+    pub fn field<T>(self, field: Field<R, T, R::Int>) -> T
     where
         R::Int: TryInto<T>,
         <R::Int as TryInto<T>>::Error: Debug,
@@ -140,9 +139,32 @@ impl<R: RegisterValue> Default for Value<R> {
     }
 }
 
-impl<R: RegisterValue> PartialEq for Value<R> {
+impl<R: RegisterValue> Debug for Value<R> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        if fmt.alternate() {
+            write!(
+                fmt,
+                "Value<{}>(0b{:02$b})",
+                R::NAME,
+                self.value,
+                <R::Int as Int>::WIDTH
+            )
+        } else {
+            write!(
+                fmt,
+                "Value<{}>(0x{:02$x})",
+                R::NAME,
+                self.value,
+                <R::Int as Int>::WIDTH / 4
+            )
+        }
+    }
+}
+
+impl<R: RegisterValue, T: Into<Value<R>> + Copy> PartialEq<T> for Value<R> {
     #[inline]
-    fn eq(&self, other: &Value<R>) -> bool {
+    fn eq(&self, other: &T) -> bool {
+        let other = (*other).into();
         self.value == other.value
     }
 }

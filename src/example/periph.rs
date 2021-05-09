@@ -48,6 +48,7 @@ mod tests {
     enum PERIPH {}
     impl Peripheral for PERIPH {
         const BASE: usize = 0;
+        const NAME: &'static str = "PERIPH";
     }
 
     #[test]

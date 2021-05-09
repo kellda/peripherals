@@ -38,27 +38,54 @@
 #[macro_export]
 macro_rules! device {
     (
-        $(#[$device_attr:meta])*
+        $(#[$($device_attr:tt)*])*
         $device:ident;
-        $($(#[$periph_attr:meta])*
+        $($(#[$($periph_attr:tt)*])*
         $periph:ident @ $base:literal : $type:ty;)*
     ) => {
-        $crate::paste!{
-            $(#[$device_attr])*
+        $crate::periph_attr_inner! { @type { $([$($device_attr)*])* } {} {
+            device_inner: @struct $device {$( $(#[$($periph_attr)*])* $periph $type; )*} {}
+        }}
+
+        $($crate::periph_attr_inner! { @type { $([$($periph_attr)*])* } {} {
+        periph_attr_inner: @expand
             #[derive(Debug)]
-            pub struct $device {$(
-                $(#[$periph_attr])*
-                pub [<$periph:lower>]: $type<$periph>,
-            )*}
-        }
+            pub enum $periph {}
+        }})*
 
-        $($(#[$periph_attr])*
-        #[derive(Debug)]
-        pub enum $periph {}
-
-        $(#[$periph_attr])*
-        impl $crate::Peripheral for $periph {
-            const BASE: usize = $base;
-        })*
+        $($crate::periph_attr_inner! { @impl { $([$($periph_attr)*])* } {} {
+        periph_attr_inner: @expand
+            impl $crate::Peripheral for $periph {
+                const BASE: usize = $base;
+                const NAME: &'static str = stringify!($periph);
+            }
+        }})*
     }
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! device_inner {
+    (@struct $device:ident {} {$(#[$device_attr:meta])*
+        $($periph:ident $type:ty; $(#[$attr:meta])*)*
+    }) => { $crate::paste! {
+        $(#[$device_attr])*
+        #[derive(Debug)]
+        pub struct $device {$(
+            $(#[$attr])*
+            pub [<$periph:lower>]: $type<$periph>,
+        )*}
+    }};
+    (@struct $(#[$attr:meta])* $device:ident {} {$($rest:tt)*} ) => {
+        $crate::device_inner!(@struct $device {} { $($rest)* $(#[$attr])* } );
+    };
+    (@struct
+        $(#[$prev:meta])* $device:ident
+        { $(#[$($attr:tt)*])* $periph:ident $type:ty; $($rest:tt)* }
+        { $($parsed:tt)* }
+    ) => {
+        $crate::periph_attr_inner! { @field { $([$($attr)*])* } {} {
+            device_inner: @struct $device { $($rest)* } { $($parsed)* $(#[$prev])* $periph $type; }
+        }}
+    };
 }
