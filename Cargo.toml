@@ -1,6 +1,6 @@
 [package]
 name = "peripherals"
-version = "0.0.3"
+version = "0.1.0"
 authors = ["kellda <damikefr@gmail.com>"]
 edition = "2018"
 description = "Microcontroller peripherals definition and ergonomic access"
