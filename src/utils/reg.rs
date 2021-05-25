@@ -47,7 +47,8 @@ impl<R: ReadRegister, P: Peripheral> Reg<R, P> {
     #[inline]
     pub fn field<T>(self, field: Field<R::Value, T, R::Int>) -> T
     where
-        R::Int: Into<T>,
+        R::Int: TryInto<T>,
+        <R::Int as TryInto<T>>::Error: Debug,
     {
         self.read().field(field)
     }
