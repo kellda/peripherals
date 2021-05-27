@@ -36,7 +36,7 @@ impl<R: ReadRegister> DynReg<R> {
     ///
     /// Same as `register.read().field(fields)`. See [`Value::field`] for more details.
     #[inline]
-    pub fn field<T>(self, field: Field<R::Value, T, R::Int>) -> T
+    pub fn field<T>(&self, field: Field<R::Value, T, R::Int>) -> T
     where
         R::Int: TryInto<T>,
         <R::Int as TryInto<T>>::Error: Debug,
@@ -49,7 +49,7 @@ impl<R: ReadRegister> DynReg<R> {
     /// Same as `register.read() & fields`. See [`Value`] for more details.
     #[inline]
     pub fn fields<F: Into<Fields<R::Value>> + MayToggle>(
-        self,
+        &self,
         fields: F,
     ) -> FieldValues<R::Value, F::Toggle> {
         self.read() & fields
